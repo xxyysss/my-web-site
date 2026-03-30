@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能减肥追踪系统</title>
+    <!-- 引入 Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -789,9 +792,37 @@
         let currentDate = new Date().toISOString().split('T')[0];
         let selectedFoodCalories = 0;
         let readOnlyMode = true; // 只读模式：true=只读(访客), false=可编辑(主人)
+        let db = null; // Firebase 数据库引用
+        const DB_PREFIX = 'weight_tracker/'; // 数据库前缀
+
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3N7i7JNGQ6Pm6T7lPqZxYxK2gDdEe8bA",
+            authDomain: "weight-tracker-xyz123.firebaseapp.com",
+            databaseURL: "https://weight-tracker-xyz123-default-rtdb.firebaseio.com",
+            projectId: "weight-tracker-xyz123",
+            storageBucket: "weight-tracker-xyz123.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        // 初始化 Firebase
+        function initFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                console.log('Firebase 初始化成功');
+            } catch (error) {
+                console.error('Firebase 初始化失败:', error);
+                alert('数据库连接失败，请刷新页面重试');
+            }
+        }
 
         // 初始化应用
         function init() {
+            // 初始化 Firebase
+            initFirebase();
+
             // 检查是否为主人（通过 localStorage 检查是否有标记）
             const isOwner = localStorage.getItem('isOwner') === 'true';
             readOnlyMode = !isOwner;
@@ -800,12 +831,43 @@
             setReadOnlyUI(readOnlyMode);
 
             // 固定设置为指定用户
-            currentUser = '主人';
+            currentUser = 'master'; // 主人账号
             document.getElementById('currentUserName').textContent = '主人';
 
             updateDateDisplay();
-            updateDashboard();
-            loadHistoryRecords();
+            loadDataFromFirebase(); // 从 Firebase 加载数据
+        }
+
+        // 从 Firebase 加载数据
+        function loadDataFromFirebase() {
+            if (!db) return;
+
+            // 监听数据变化
+            const userRef = db.ref(`${DB_PREFIX}users/${currentUser}`);
+
+            // 加载用户信息
+            userRef.child('info').on('value', (snapshot) => {
+                const userInfo = snapshot.val();
+                if (userInfo) {
+                    document.getElementById('userInfoDisplay').innerHTML = generateUserInfoHTML(userInfo);
+                }
+            });
+
+            // 加载所有日期的记录
+            userRef.child('records').on('value', (snapshot) => {
+                const allRecords = snapshot.val();
+                if (allRecords) {
+                    // 将 Firebase 数据转换为 localStorage 格式
+                    Object.keys(allRecords).forEach(date => {
+                        const key = `records_${currentUser}_${date}`;
+                        localStorage.setItem(key, JSON.stringify(allRecords[date]));
+                    });
+                }
+                updateDashboard();
+                loadHistoryRecords();
+            });
+
+            console.log('正在加载数据...');
         }
 
         // 设置只读模式 UI
@@ -1039,9 +1101,10 @@
             }
 
             localStorage.setItem(`user_${currentUser}`, JSON.stringify(userInfo));
+            saveToFirebase({ type: 'userInfo', value: userInfo }); // 同时保存到 Firebase
             closeModal('userSetupModal');
-            loadUserInfo();
             updateDashboard();
+            loadHistoryRecords();
         }
 
         // 获取用户信息
@@ -1118,12 +1181,42 @@
                 return;
             }
 
+            display.innerHTML = generateUserInfoHTML(userInfo);
+        }
+
+        // 计算BMI
+        function calculateBMI(weight, height) {
+            const heightInMeters = height / 100;
+            return weight / (heightInMeters * heightInMeters);
+        }
+
+        // 获取BMI状态
+        function getBMIStatus(bmi) {
+            if (bmi < 18.5) return '偏瘦';
+            if (bmi < 24) return '正常';
+            if (bmi < 28) return '偏胖';
+            return '肥胖';
+        }
+
+        // 计算基础代谢率 (BMR)
+        function calculateBMR(userInfo) {
+            // 使用 Mifflin-St Jeor 公式
+            if (userInfo.gender === 'male') {
+                return 10 * userInfo.weight + 6.25 * userInfo.height - 5 * userInfo.age + 5;
+            } else {
+                return 10 * userInfo.weight + 6.25 * userInfo.height - 5 * userInfo.age - 161;
+            }
+        }
+
+        // 生成用户信息HTML
+        function generateUserInfoHTML(userInfo) {
             const bmi = calculateBMI(userInfo.weight, userInfo.height);
             const bmiStatus = getBMIStatus(bmi);
             const bmr = calculateBMR(userInfo);
+
             const stats = calculateUserStats();
 
-            display.innerHTML = `
+            return `
                 <div class="user-info-content">
                     <div class="user-basic-info">
                         <div class="user-info-item"><strong>姓名</strong> ${userInfo.name}</div>
@@ -1180,27 +1273,16 @@
             `;
         }
 
-        // 计算BMI
-        function calculateBMI(weight, height) {
-            const heightInMeters = height / 100;
-            return weight / (heightInMeters * heightInMeters);
-        }
+        // 保存数据到 Firebase
+        function saveToFirebase(data) {
+            if (!db) return;
 
-        // 获取BMI状态
-        function getBMIStatus(bmi) {
-            if (bmi < 18.5) return '偏瘦';
-            if (bmi < 24) return '正常';
-            if (bmi < 28) return '偏胖';
-            return '肥胖';
-        }
+            const userRef = db.ref(`${DB_PREFIX}users/${currentUser}`);
 
-        // 计算基础代谢率 (BMR)
-        function calculateBMR(userInfo) {
-            // 使用 Mifflin-St Jeor 公式
-            if (userInfo.gender === 'male') {
-                return 10 * userInfo.weight + 6.25 * userInfo.height - 5 * userInfo.age + 5;
-            } else {
-                return 10 * userInfo.weight + 6.25 * userInfo.height - 5 * userInfo.age - 161;
+            if (data.type === 'userInfo') {
+                userRef.child('info').set(data.value);
+            } else if (data.type === 'records') {
+                userRef.child(`records/${currentDate}`).set(data.value);
             }
         }
 
@@ -1368,9 +1450,9 @@
             });
 
             saveDayRecords(records);
+            saveToFirebase({ type: 'records', value: records }); // 同时保存到 Firebase
             closeModal('addFoodModal');
             updateDashboard();
-            loadUserInfo();
             loadHistoryRecords();
             selectedFoodCalories = 0;
         }
@@ -1409,8 +1491,8 @@
             const records = getDayRecords();
             records.foods = records.foods.filter(food => food.id !== id);
             saveDayRecords(records);
+            saveToFirebase({ type: 'records', value: records }); // 同步到 Firebase
             updateDashboard();
-            loadUserInfo();
             loadHistoryRecords();
         }
 
@@ -1499,9 +1581,9 @@
             });
 
             saveDayRecords(records);
+            saveToFirebase({ type: 'records', value: records }); // 同步到 Firebase
             closeModal('addExerciseModal');
             updateDashboard();
-            loadUserInfo();
             loadHistoryRecords();
         }
 
@@ -1532,8 +1614,8 @@
             const records = getDayRecords();
             records.exercises = records.exercises.filter(ex => ex.id !== id);
             saveDayRecords(records);
+            saveToFirebase({ type: 'records', value: records }); // 同步到 Firebase
             updateDashboard();
-            loadUserInfo();
             loadHistoryRecords();
         }
 
