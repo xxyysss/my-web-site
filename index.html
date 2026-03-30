@@ -1166,10 +1166,19 @@
             dates.forEach(date => {
                 const key = `records_${currentUser}_${date}`;
                 const data = localStorage.getItem(key);
-                const records = data ? JSON.parse(data) : { foods: [], exercises: [] };
+                let records = { foods: [], exercises: [] };
+                try {
+                    records = data ? JSON.parse(data) : { foods: [], exercises: [] };
+                } catch (e) {
+                    console.error(`解析 ${key} 失败:`, e);
+                    records = { foods: [], exercises: [] };
+                }
 
-                const intake = records.foods.reduce((sum, food) => sum + food.calories, 0);
-                const burn = records.exercises.reduce((sum, ex) => sum + ex.calories, 0);
+                const foods = Array.isArray(records?.foods) ? records.foods : [];
+                const exercises = Array.isArray(records?.exercises) ? records.exercises : [];
+
+                const intake = foods.reduce((sum, food) => sum + (food.calories || 0), 0);
+                const burn = exercises.reduce((sum, ex) => sum + (ex.calories || 0), 0);
 
                 totalIntake += intake;
                 totalBurn += burn;
