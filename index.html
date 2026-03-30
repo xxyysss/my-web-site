@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能减肥追踪系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+
+        .user-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .user-info-card {
+            grid-column: 1 / -1;
+            padding: 20px 25px !important;
+        }
+
+        .user-info-content {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .user-basic-info {
+            flex: 1;
+            min-width: 300px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px 25px;
+        }
+
+        .user-info-item {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .user-info-item strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .user-bmi-section {
+            min-width: 200px;
+        }
+
+        .user-stats-section {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .user-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .user-stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .user-stat-box .number {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .user-stat-box .label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .user-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .user-info-card h2 {
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .stat-box .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .food-list, .exercise-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .food-item, .exercise-item {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .food-item .info, .exercise-item .info {
+            flex: 1;
+        }
+
+        .food-item .calories, .exercise-item .calories {
+            font-weight: bold;
+            color: #667eea;
+            margin-left: 10px;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #ff3838;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .food-search {
+            margin-bottom: 15px;
+        }
+
+        .food-search input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .food-suggestions {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .food-suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .food-suggestion-item:hover {
+            background: #f5f5f5;
+        }
+
+        .food-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .date-btn {
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .date-btn:hover {
+            background: #5568d3;
+        }
+
+        #currentDate {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .bmi-display {
+            text-align: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .bmi-display .bmi-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .bmi-display .bmi-status {
+            font-size: 14px;
+            margin-top: 3px;
+        }
+
+        .history-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+
+        .history-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 22px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .history-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        table th {
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+
+        table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-loss {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .status-gain {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .status-maintain {
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .weight-change {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                text-align: center;
+            }
+
+            .user-section {
+                width: 100%;
+                justify-content: center;
+                margin-top: 15px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th, table td {
+                padding: 8px 4px;
+            }
+
+            .user-info-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .user-basic-info {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px 15px;
+            }
+
+            .user-bmi-section {
+                width: 100%;
+            }
+
+            .user-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏃 智能减肥追踪系统</h1>
+            <div class="user-section">
+                <span id="currentUserName">未登录</span>
+                <button class="btn btn-secondary" onclick="switchUser()">切换用户</button>
+                <button class="btn btn-primary" onclick="showUserSetup()">个人设置</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 个人信息 -->
+            <div class="card user-info-card">
+                <h2>👤 个人信息</h2>
+                <div id="userInfoDisplay">
+                    <p style="text-align: center; color: #999;">请先完善个人信息</p>
+                </div>
+            </div>
+
+            <!-- 今日概览 -->
+            <div class="card">
+                <h2>📊 今日概览</h2>
+                <div class="date-selector">
+                    <button class="date-btn" onclick="changeDate(-1)">◀</button>
+                    <span id="currentDate"></span>
+                    <button class="date-btn" onclick="changeDate(1)">▶</button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="number" id="todayIntake">0</div>
+                        <div class="label">摄入热量 (kcal)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="todayBurn">0</div>
+                        <div class="label">消耗热量 (kcal)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="netCalories">0</div>
+                        <div class="label">净热量 (kcal)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="bmrDisplay">0</div>
+                        <div class="label">基础代谢 (kcal)</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="calorieProgress">0%</div>
+                </div>
+            </div>
+
+            <!-- 饮食记录 -->
+            <div class="card">
+                <h2>🍽️ 饮食记录</h2>
+                <button class="btn btn-primary" onclick="showAddFood()" style="width: 100%; margin-bottom: 15px;">添加食物</button>
+                <div class="food-list" id="foodList">
+                    <p style="text-align: center; color: #999;">今日暂无饮食记录</p>
+                </div>
+            </div>
+
+            <!-- 运动记录 -->
+            <div class="card">
+                <h2>💪 运动记录</h2>
+                <button class="btn btn-primary" onclick="showAddExercise()" style="width: 100%; margin-bottom: 15px;">添加运动</button>
+                <div class="exercise-list" id="exerciseList">
+                    <p style="text-align: center; color: #999;">今日暂无运动记录</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录统计 -->
+        <div class="history-section">
+            <h2>📈 历史记录统计</h2>
+            <div class="history-table">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>摄入 (kcal)</th>
+                            <th>消耗 (kcal)</th>
+                            <th>净热量 (kcal)</th>
+                            <th>预计体重变化 (kg)</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #999; padding: 30px;">暂无历史记录</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户设置模态框 -->
+    <div class="modal" id="userSetupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>个人设置</h2>
+                <button class="close-btn" onclick="closeModal('userSetupModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="userName" placeholder="请输入姓名">
+            </div>
+            <div class="form-group">
+                <label>性别</label>
+                <select id="userGender">
+                    <option value="male">男</option>
+                    <option value="female">女</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>年龄</label>
+                <input type="number" id="userAge" placeholder="请输入年龄" min="1" max="120">
+            </div>
+            <div class="form-group">
+                <label>身高 (cm)</label>
+                <input type="number" id="userHeight" placeholder="请输入身高" min="50" max="250">
+            </div>
+            <div class="form-group">
+                <label>体重 (kg)</label>
+                <input type="number" id="userWeight" placeholder="请输入体重" step="0.1" min="20" max="300">
+            </div>
+            <div class="form-group">
+                <label>目标体重 (kg)</label>
+                <input type="number" id="userTargetWeight" placeholder="请输入目标体重" step="0.1" min="20" max="300">
+            </div>
+            <button class="btn btn-primary" onclick="saveUserInfo()" style="width: 100%;">保存</button>
+        </div>
+    </div>
+
+    <!-- 添加食物模态框 -->
+    <div class="modal" id="addFoodModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加食物</h2>
+                <button class="close-btn" onclick="closeModal('addFoodModal')">&times;</button>
+            </div>
+            <div class="food-search">
+                <input type="text" id="foodSearch" placeholder="搜索食物..." oninput="searchFood()">
+                <div class="food-suggestions" id="foodSuggestions"></div>
+            </div>
+            <div class="form-group">
+                <label>食物名称</label>
+                <input type="text" id="foodName" placeholder="请输入食物名称">
+            </div>
+            <div class="form-group">
+                <label>份量 (克)</label>
+                <input type="number" id="foodAmount" placeholder="请输入份量" value="100" min="1">
+            </div>
+            <div class="form-group">
+                <label>热量 (kcal/100g 或 总热量)</label>
+                <input type="number" id="foodCalories" placeholder="系统自动计算或手动输入" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+                <label>用餐时间</label>
+                <select id="mealType">
+                    <option value="breakfast">早餐</option>
+                    <option value="lunch">午餐</option>
+                    <option value="dinner">晚餐</option>
+                    <option value="snack">加餐</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="addFood()" style="width: 100%;">添加</button>
+        </div>
+    </div>
+
+    <!-- 添加运动模态框 -->
+    <div class="modal" id="addExerciseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加运动</h2>
+                <button class="close-btn" onclick="closeModal('addExerciseModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>运动类型</label>
+                <select id="exerciseType" onchange="updateExerciseCalories()">
+                    <option value="">选择运动类型</option>
+                    <option value="walk">步行</option>
+                    <option value="run">跑步</option>
+                    <option value="cycle">骑行</option>
+                    <option value="swim">游泳</option>
+                    <option value="yoga">瑜伽</option>
+                    <option value="strength">力量训练</option>
+                    <option value="custom">自定义</option>
+                </select>
+            </div>
+            <div class="form-group" id="stepsGroup" style="display: none;">
+                <label>步数</label>
+                <input type="number" id="exerciseSteps" placeholder="请输入步数" min="0" oninput="calculateStepsCalories()">
+            </div>
+            <div class="form-group">
+                <label>运动时长 (分钟)</label>
+                <input type="number" id="exerciseDuration" placeholder="请输入时长" min="0" oninput="updateExerciseCalories()">
+            </div>
+            <div class="form-group">
+                <label>消耗热量 (kcal)</label>
+                <input type="number" id="exerciseCalories" placeholder="系统自动计算或手动输入" step="0.1" min="0">
+            </div>
+            <button class="btn btn-primary" onclick="addExercise()" style="width: 100%;">添加</button>
+        </div>
+    </div>
+
+    <!-- 切换用户模态框 -->
+    <div class="modal" id="switchUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>切换用户</h2>
+                <button class="close-btn" onclick="closeModal('switchUserModal')">&times;</button>
+            </div>
+            <div id="userList"></div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>新建用户</label>
+                <input type="text" id="newUserName" placeholder="请输入用户名">
+            </div>
+            <button class="btn btn-primary" onclick="createNewUser()" style="width: 100%;">创建用户</button>
+        </div>
+    </div>
+
+    <script>
+        // 食物热量数据库 (每100克热量)
+        const foodDatabase = {
+            // 主食类
+            '米饭': 116, '馒头': 221, '面条': 137, '面包': 312, '油条': 388,
+            '包子': 227, '饺子': 240, '馄饨': 235, '粥': 46, '燕麦': 367,
+            '全麦面包': 246, '红薯': 86, '玉米': 112, '土豆': 81,
+
+            // 肉类
+            '鸡胸肉': 133, '牛肉': 125, '猪肉': 395, '羊肉': 203, '鱼肉': 104,
+            '虾': 93, '鸡蛋': 147, '鸭肉': 240, '鸡腿': 181,
+
+            // 蔬菜类
+            '白菜': 17, '菠菜': 24, '西兰花': 36, '番茄': 19, '黄瓜': 15,
+            '胡萝卜': 39, '茄子': 21, '青椒': 22, '芹菜': 12, '生菜': 13,
+            '韭菜': 26, '豆芽': 18, '蘑菇': 22,
+
+            // 水果类
+            '苹果': 52, '香蕉': 91, '橙子': 48, '葡萄': 69, '西瓜': 30,
+            '草莓': 32, '梨': 44, '桃子': 48, '猕猴桃': 56, '芒果': 60,
+
+            // 饮品类
+            '牛奶': 54, '酸奶': 72, '豆浆': 31, '可乐': 43, '橙汁': 45,
+            '咖啡': 1, '啤酒': 32,
+
+            // 零食类
+            '薯片': 548, '巧克力': 586, '饼干': 433, '蛋糕': 347, '冰淇淋': 207,
+            '坚果': 600, '瓜子': 573
+        };
+
+        // 运动消耗数据 (kcal/分钟/kg体重)
+        const exerciseDatabase = {
+            'walk': 0.045,      // 步行
+            'run': 0.12,        // 跑步
+            'cycle': 0.08,      // 骑行
+            'swim': 0.11,       // 游泳
+            'yoga': 0.04,       // 瑜伽
+            'strength': 0.06    // 力量训练
+        };
+
+        // 全局变量
+        let currentUser = null;
+        let currentDate = new Date().toISOString().split('T')[0];
+        let selectedFoodCalories = 0;
+
+        // 初始化应用
+        function init() {
+            loadCurrentUser();
+            updateDateDisplay();
+            updateDashboard();
+            loadHistoryRecords();
+        }
+
+        // 获取所有历史记录日期
+        function getAllRecordDates() {
+            if (!currentUser) return [];
+
+            const dates = [];
+            const prefix = `records_${currentUser}_`;
+
+            // 遍历localStorage获取所有该用户的记录日期
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(prefix)) {
+                    const date = key.replace(prefix, '');
+                    dates.push(date);
+                }
+            }
+
+            // 按日期降序排序（最新的在前）
+            return dates.sort((a, b) => new Date(b) - new Date(a));
+        }
+
+        // 加载历史记录统计
+        function loadHistoryRecords() {
+            if (!currentUser) {
+                document.getElementById('historyTableBody').innerHTML =
+                    '<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">请先登录</td></tr>';
+                return;
+            }
+
+            const dates = getAllRecordDates();
+            const userInfo = getUserInfo();
+
+            if (dates.length === 0) {
+                document.getElementById('historyTableBody').innerHTML =
+                    '<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">暂无历史记录</td></tr>';
+                return;
+            }
+
+            // 生成表格行
+            const tableRows = dates.map(date => {
+                const key = `records_${currentUser}_${date}`;
+                const data = localStorage.getItem(key);
+                const records = data ? JSON.parse(data) : { foods: [], exercises: [] };
+
+                // 计算该日数据
+                const intake = records.foods.reduce((sum, food) => sum + food.calories, 0);
+                const burn = records.exercises.reduce((sum, ex) => sum + ex.calories, 0);
+                const netCalories = intake - burn;
+
+                // 计算基础代谢
+                let bmr = 0;
+                if (userInfo) {
+                    bmr = calculateBMR(userInfo);
+                }
+
+                // 计算净热量（考虑基础代谢）
+                const totalNetCalories = netCalories - bmr;
+
+                // 计算预计体重变化（7700kcal ≈ 1kg脂肪）
+                const weightChange = totalNetCalories / 7700;
+
+                // 判断状态
+                let status = '';
+                let statusClass = '';
+                if (totalNetCalories < -200) {
+                    status = '减肥 ✓';
+                    statusClass = 'status-loss';
+                } else if (totalNetCalories > 200) {
+                    status = '增重 ✗';
+                    statusClass = 'status-gain';
+                } else {
+                    status = '维持';
+                    statusClass = 'status-maintain';
+                }
+
+                // 格式化日期显示
+                const dateObj = new Date(date);
+                const dateDisplay = dateObj.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    weekday: 'short'
+                });
+
+                return `
+                    <tr>
+                        <td><strong>${dateDisplay}</strong></td>
+                        <td>${intake.toFixed(0)}</td>
+                        <td>${burn.toFixed(0)}</td>
+                        <td style="color: ${totalNetCalories < 0 ? '#22c55e' : '#ef4444'}">
+                            ${totalNetCalories.toFixed(0)}
+                        </td>
+                        <td>
+                            <span style="color: ${weightChange < 0 ? '#22c55e' : '#ef4444'}">
+                                ${weightChange > 0 ? '+' : ''}${weightChange.toFixed(3)}
+                            </span>
+                            <br>
+                            <span class="weight-change">(${bmr.toFixed(0)} BMR)</span>
+                        </td>
+                        <td class="${statusClass}">${status}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('historyTableBody').innerHTML = tableRows;
+        }
+
+        // 加载当前用户
+        function loadCurrentUser() {
+            const lastUser = localStorage.getItem('lastUser');
+            if (lastUser) {
+                currentUser = lastUser;
+                document.getElementById('currentUserName').textContent = currentUser;
+                loadUserInfo();
+            } else {
+                switchUser();
+            }
+        }
+
+        // 切换用户
+        function switchUser() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userListHtml = users.map(user =>
+                `<div class="food-suggestion-item" onclick="selectUser('${user}')">
+                    <strong>${user}</strong>
+                </div>`
+            ).join('');
+
+            document.getElementById('userList').innerHTML = userListHtml || '<p style="text-align: center; color: #999;">暂无用户</p>';
+            openModal('switchUserModal');
+        }
+
+        // 选择用户
+        function selectUser(username) {
+            currentUser = username;
+            localStorage.setItem('lastUser', username);
+            document.getElementById('currentUserName').textContent = username;
+            closeModal('switchUserModal');
+            loadUserInfo();
+            updateDashboard();
+            loadHistoryRecords();
+        }
+
+        // 创建新用户
+        function createNewUser() {
+            const username = document.getElementById('newUserName').value.trim();
+            if (!username) {
+                alert('请输入用户名');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.includes(username)) {
+                alert('用户名已存在');
+                return;
+            }
+
+            users.push(username);
+            localStorage.setItem('users', JSON.stringify(users));
+            selectUser(username);
+        }
+
+        // 显示用户设置
+        function showUserSetup() {
+            if (!currentUser) {
+                alert('请先登录');
+                return;
+            }
+
+            const userInfo = getUserInfo();
+            if (userInfo) {
+                document.getElementById('userName').value = userInfo.name || '';
+                document.getElementById('userGender').value = userInfo.gender || 'male';
+                document.getElementById('userAge').value = userInfo.age || '';
+                document.getElementById('userHeight').value = userInfo.height || '';
+                document.getElementById('userWeight').value = userInfo.weight || '';
+                document.getElementById('userTargetWeight').value = userInfo.targetWeight || '';
+            }
+
+            openModal('userSetupModal');
+        }
+
+        // 保存用户信息
+        function saveUserInfo() {
+            if (!currentUser) return;
+
+            const userInfo = {
+                name: document.getElementById('userName').value.trim(),
+                gender: document.getElementById('userGender').value,
+                age: parseInt(document.getElementById('userAge').value),
+                height: parseFloat(document.getElementById('userHeight').value),
+                weight: parseFloat(document.getElementById('userWeight').value),
+                targetWeight: parseFloat(document.getElementById('userTargetWeight').value)
+            };
+
+            if (!userInfo.name || !userInfo.age || !userInfo.height || !userInfo.weight) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            localStorage.setItem(`user_${currentUser}`, JSON.stringify(userInfo));
+            closeModal('userSetupModal');
+            loadUserInfo();
+            updateDashboard();
+        }
+
+        // 获取用户信息
+        function getUserInfo() {
+            if (!currentUser) return null;
+            const data = localStorage.getItem(`user_${currentUser}`);
+            return data ? JSON.parse(data) : null;
+        }
+
+        // 计算用户累计统计数据
+        function calculateUserStats() {
+            if (!currentUser) return null;
+
+            const dates = getAllRecordDates();
+            const userInfo = getUserInfo();
+
+            if (dates.length === 0 || !userInfo) {
+                return {
+                    totalDays: 0,
+                    totalIntake: 0,
+                    totalBurn: 0,
+                    totalNet: 0,
+                    avgIntake: 0,
+                    avgBurn: 0,
+                    avgNet: 0,
+                    weightChange: 0
+                };
+            }
+
+            let totalIntake = 0;
+            let totalBurn = 0;
+            let totalBMR = 0;
+
+            dates.forEach(date => {
+                const key = `records_${currentUser}_${date}`;
+                const data = localStorage.getItem(key);
+                const records = data ? JSON.parse(data) : { foods: [], exercises: [] };
+
+                const intake = records.foods.reduce((sum, food) => sum + food.calories, 0);
+                const burn = records.exercises.reduce((sum, ex) => sum + ex.calories, 0);
+
+                totalIntake += intake;
+                totalBurn += burn;
+            });
+
+            const bmr = calculateBMR(userInfo);
+            totalBMR = bmr * dates.length;
+
+            const totalNet = totalIntake - totalBurn - totalBMR;
+            const avgIntake = totalIntake / dates.length;
+            const avgBurn = totalBurn / dates.length;
+            const avgNet = totalNet / dates.length;
+            const weightChange = totalNet / 7700; // 7700kcal ≈ 1kg脂肪
+
+            return {
+                totalDays: dates.length,
+                totalIntake: totalIntake,
+                totalBurn: totalBurn,
+                totalNet: totalNet,
+                avgIntake: avgIntake,
+                avgBurn: avgBurn,
+                avgNet: avgNet,
+                weightChange: weightChange
+            };
+        }
+
+        // 加载用户信息显示
+        function loadUserInfo() {
+            const userInfo = getUserInfo();
+            const display = document.getElementById('userInfoDisplay');
+
+            if (!userInfo) {
+                display.innerHTML = '<p style="text-align: center; color: #999;">请先完善个人信息</p>';
+                return;
+            }
+
+            const bmi = calculateBMI(userInfo.weight, userInfo.height);
+            const bmiStatus = getBMIStatus(bmi);
+            const bmr = calculateBMR(userInfo);
+            const stats = calculateUserStats();
+
+            display.innerHTML = `
+                <div class="user-info-content">
+                    <div class="user-basic-info">
+                        <div class="user-info-item"><strong>姓名</strong> ${userInfo.name}</div>
+                        <div class="user-info-item"><strong>性别</strong> ${userInfo.gender === 'male' ? '男' : '女'}</div>
+                        <div class="user-info-item"><strong>年龄</strong> ${userInfo.age} 岁</div>
+                        <div class="user-info-item"><strong>身高</strong> ${userInfo.height} cm</div>
+                        <div class="user-info-item"><strong>体重</strong> ${userInfo.weight} kg</div>
+                        <div class="user-info-item"><strong>目标体重</strong> ${userInfo.targetWeight} kg</div>
+                        <div class="user-info-item"><strong>基础代谢</strong> ${bmr.toFixed(0)} kcal/天</div>
+                    </div>
+                    <div class="user-bmi-section">
+                        <div class="bmi-display">
+                            <div class="bmi-value">${bmi.toFixed(1)}</div>
+                            <div class="bmi-status">BMI - ${bmiStatus}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-stats-section">
+                    <div class="user-stats-grid">
+                        <div class="user-stat-box">
+                            <div class="number">${stats.totalDays}</div>
+                            <div class="label">累计天数</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number">${stats.totalIntake.toFixed(0)}</div>
+                            <div class="label">累计摄入 (kcal)</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number">${stats.totalBurn.toFixed(0)}</div>
+                            <div class="label">累计消耗 (kcal)</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number" style="color: ${stats.totalNet < 0 ? '#a7f3d0' : '#fca5a5'}">${stats.totalNet.toFixed(0)}</div>
+                            <div class="label">累计净热量 (kcal)</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number">${stats.avgIntake.toFixed(0)}</div>
+                            <div class="label">平均每日摄入 (kcal)</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number">${stats.avgBurn.toFixed(0)}</div>
+                            <div class="label">平均每日消耗 (kcal)</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number" style="color: ${stats.avgNet < 0 ? '#a7f3d0' : '#fca5a5'}">${stats.avgNet.toFixed(0)}</div>
+                            <div class="label">平均每日净热量 (kcal)</div>
+                        </div>
+                        <div class="user-stat-box">
+                            <div class="number" style="color: ${stats.weightChange < 0 ? '#a7f3d0' : '#fca5a5'}">${stats.weightChange > 0 ? '+' : ''}${stats.weightChange.toFixed(2)}</div>
+                            <div class="label">预计体重变化 (kg)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 计算BMI
+        function calculateBMI(weight, height) {
+            const heightInMeters = height / 100;
+            return weight / (heightInMeters * heightInMeters);
+        }
+
+        // 获取BMI状态
+        function getBMIStatus(bmi) {
+            if (bmi < 18.5) return '偏瘦';
+            if (bmi < 24) return '正常';
+            if (bmi < 28) return '偏胖';
+            return '肥胖';
+        }
+
+        // 计算基础代谢率 (BMR)
+        function calculateBMR(userInfo) {
+            // 使用 Mifflin-St Jeor 公式
+            if (userInfo.gender === 'male') {
+                return 10 * userInfo.weight + 6.25 * userInfo.height - 5 * userInfo.age + 5;
+            } else {
+                return 10 * userInfo.weight + 6.25 * userInfo.height - 5 * userInfo.age - 161;
+            }
+        }
+
+        // 日期相关
+        function updateDateDisplay() {
+            const date = new Date(currentDate);
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentDate').textContent = date.toLocaleDateString('zh-CN', options);
+        }
+
+        function changeDate(offset) {
+            const date = new Date(currentDate);
+            date.setDate(date.getDate() + offset);
+            currentDate = date.toISOString().split('T')[0];
+            updateDateDisplay();
+            updateDashboard();
+        }
+
+        // 更新仪表板
+        function updateDashboard() {
+            if (!currentUser) return;
+
+            const records = getDayRecords();
+            const userInfo = getUserInfo();
+
+            // 计算总摄入和消耗
+            const totalIntake = records.foods.reduce((sum, food) => sum + food.calories, 0);
+            const totalBurn = records.exercises.reduce((sum, ex) => sum + ex.calories, 0);
+            const netCalories = totalIntake - totalBurn;
+
+            // 更新显示
+            document.getElementById('todayIntake').textContent = totalIntake.toFixed(0);
+            document.getElementById('todayBurn').textContent = totalBurn.toFixed(0);
+            document.getElementById('netCalories').textContent = netCalories.toFixed(0);
+
+            if (userInfo) {
+                const bmr = calculateBMR(userInfo);
+                document.getElementById('bmrDisplay').textContent = bmr.toFixed(0);
+
+                // 更新进度条
+                const tdee = bmr * 1.2; // 基础代谢 × 1.2 (久坐)
+                const percentage = Math.min((totalIntake / tdee) * 100, 100);
+                document.getElementById('calorieProgress').style.width = percentage + '%';
+                document.getElementById('calorieProgress').textContent = percentage.toFixed(0) + '%';
+            }
+
+            // 更新食物列表
+            updateFoodList(records.foods);
+            // 更新运动列表
+            updateExerciseList(records.exercises);
+        }
+
+        // 获取当日记录
+        function getDayRecords() {
+            if (!currentUser) return { foods: [], exercises: [] };
+
+            const key = `records_${currentUser}_${currentDate}`;
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : { foods: [], exercises: [] };
+        }
+
+        // 保存当日记录
+        function saveDayRecords(records) {
+            if (!currentUser) return;
+            const key = `records_${currentUser}_${currentDate}`;
+            localStorage.setItem(key, JSON.stringify(records));
+        }
+
+        // 食物相关
+        function showAddFood() {
+            if (!currentUser) {
+                alert('请先登录');
+                return;
+            }
+            document.getElementById('foodName').value = '';
+            document.getElementById('foodAmount').value = '100';
+            document.getElementById('foodCalories').value = '';
+            document.getElementById('foodSearch').value = '';
+            document.getElementById('foodSuggestions').innerHTML = '';
+            openModal('addFoodModal');
+        }
+
+        function searchFood() {
+            const query = document.getElementById('foodSearch').value.toLowerCase();
+            const suggestions = document.getElementById('foodSuggestions');
+
+            if (!query) {
+                suggestions.innerHTML = '';
+                return;
+            }
+
+            const matches = Object.keys(foodDatabase)
+                .filter(food => food.includes(query))
+                .slice(0, 10);
+
+            if (matches.length === 0) {
+                suggestions.innerHTML = '<div style="padding: 10px; text-align: center; color: #999;">未找到匹配的食物</div>';
+                return;
+            }
+
+            suggestions.innerHTML = matches.map(food =>
+                `<div class="food-suggestion-item" onclick="selectFood('${food}', ${foodDatabase[food]})">
+                    <strong>${food}</strong> - ${foodDatabase[food]} kcal/100g
+                </div>`
+            ).join('');
+        }
+
+        function selectFood(name, calories) {
+            document.getElementById('foodName').value = name;
+            selectedFoodCalories = calories;
+            updateFoodCalories();
+            document.getElementById('foodSearch').value = '';
+            document.getElementById('foodSuggestions').innerHTML = '';
+        }
+
+        function updateFoodCalories() {
+            const amount = parseFloat(document.getElementById('foodAmount').value) || 100;
+            if (selectedFoodCalories > 0) {
+                const totalCalories = (selectedFoodCalories * amount / 100).toFixed(0);
+                document.getElementById('foodCalories').value = totalCalories;
+            }
+        }
+
+        // 监听份量变化
+        document.addEventListener('DOMContentLoaded', function() {
+            const amountInput = document.getElementById('foodAmount');
+            if (amountInput) {
+                amountInput.addEventListener('input', updateFoodCalories);
+            }
+        });
+
+        function addFood() {
+            const name = document.getElementById('foodName').value.trim();
+            const amount = parseFloat(document.getElementById('foodAmount').value);
+            let calories = parseFloat(document.getElementById('foodCalories').value);
+            const mealType = document.getElementById('mealType').value;
+
+            if (!name || !amount) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            // 如果没有手动输入热量，尝试从数据库获取
+            if (!calories && foodDatabase[name]) {
+                calories = (foodDatabase[name] * amount / 100);
+            }
+
+            if (!calories || calories <= 0) {
+                alert('请输入热量或从数据库选择食物');
+                return;
+            }
+
+            const records = getDayRecords();
+            records.foods.push({
+                id: Date.now(),
+                name,
+                amount,
+                calories,
+                mealType,
+                timestamp: new Date().toISOString()
+            });
+
+            saveDayRecords(records);
+            closeModal('addFoodModal');
+            updateDashboard();
+            loadUserInfo();
+            loadHistoryRecords();
+            selectedFoodCalories = 0;
+        }
+
+        function updateFoodList(foods) {
+            const list = document.getElementById('foodList');
+            if (foods.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999;">今日暂无饮食记录</p>';
+                return;
+            }
+
+            const mealTypeNames = {
+                breakfast: '早餐',
+                lunch: '午餐',
+                dinner: '晚餐',
+                snack: '加餐'
+            };
+
+            list.innerHTML = foods.map(food => `
+                <div class="food-item">
+                    <div class="info">
+                        <strong>${food.name}</strong> (${mealTypeNames[food.mealType]})<br>
+                        <small>${food.amount}g</small>
+                    </div>
+                    <span class="calories">${food.calories.toFixed(0)} kcal</span>
+                    <button class="delete-btn" onclick="deleteFood(${food.id})">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteFood(id) {
+            const records = getDayRecords();
+            records.foods = records.foods.filter(food => food.id !== id);
+            saveDayRecords(records);
+            updateDashboard();
+            loadUserInfo();
+            loadHistoryRecords();
+        }
+
+        // 运动相关
+        function showAddExercise() {
+            if (!currentUser) {
+                alert('请先登录');
+                return;
+            }
+            document.getElementById('exerciseType').value = '';
+            document.getElementById('exerciseDuration').value = '';
+            document.getElementById('exerciseCalories').value = '';
+            document.getElementById('exerciseSteps').value = '';
+            document.getElementById('stepsGroup').style.display = 'none';
+            openModal('addExerciseModal');
+        }
+
+        function updateExerciseCalories() {
+            const type = document.getElementById('exerciseType').value;
+            const duration = parseFloat(document.getElementById('exerciseDuration').value);
+
+            if (type === 'walk') {
+                document.getElementById('stepsGroup').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('stepsGroup').style.display = 'none';
+            }
+
+            if (type && type !== 'custom' && duration > 0) {
+                const userInfo = getUserInfo();
+                if (userInfo) {
+                    const calories = exerciseDatabase[type] * duration * userInfo.weight;
+                    document.getElementById('exerciseCalories').value = calories.toFixed(0);
+                }
+            }
+        }
+
+        function calculateStepsCalories() {
+            const steps = parseInt(document.getElementById('exerciseSteps').value) || 0;
+            const userInfo = getUserInfo();
+
+            if (steps > 0 && userInfo) {
+                // 假设每步消耗约0.04卡路里/kg体重
+                const calories = steps * 0.04 * userInfo.weight / 100;
+                document.getElementById('exerciseCalories').value = calories.toFixed(0);
+
+                // 自动计算时长（假设每分钟100步）
+                const duration = Math.round(steps / 100);
+                document.getElementById('exerciseDuration').value = duration;
+            }
+        }
+
+        function addExercise() {
+            const type = document.getElementById('exerciseType').value;
+            const duration = parseFloat(document.getElementById('exerciseDuration').value);
+            const calories = parseFloat(document.getElementById('exerciseCalories').value);
+            const steps = parseInt(document.getElementById('exerciseSteps').value) || 0;
+
+            if (!type || !duration || !calories || calories <= 0) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            const typeNames = {
+                walk: '步行',
+                run: '跑步',
+                cycle: '骑行',
+                swim: '游泳',
+                yoga: '瑜伽',
+                strength: '力量训练',
+                custom: '自定义运动'
+            };
+
+            const records = getDayRecords();
+            records.exercises.push({
+                id: Date.now(),
+                type: typeNames[type],
+                duration,
+                calories,
+                steps: steps > 0 ? steps : null,
+                timestamp: new Date().toISOString()
+            });
+
+            saveDayRecords(records);
+            closeModal('addExerciseModal');
+            updateDashboard();
+            loadUserInfo();
+            loadHistoryRecords();
+        }
+
+        function updateExerciseList(exercises) {
+            const list = document.getElementById('exerciseList');
+            if (exercises.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999;">今日暂无运动记录</p>';
+                return;
+            }
+
+            list.innerHTML = exercises.map(ex => `
+                <div class="exercise-item">
+                    <div class="info">
+                        <strong>${ex.type}</strong><br>
+                        <small>${ex.duration}分钟${ex.steps ? ` · ${ex.steps}步` : ''}</small>
+                    </div>
+                    <span class="calories">-${ex.calories.toFixed(0)} kcal</span>
+                    <button class="delete-btn" onclick="deleteExercise(${ex.id})">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteExercise(id) {
+            const records = getDayRecords();
+            records.exercises = records.exercises.filter(ex => ex.id !== id);
+            saveDayRecords(records);
+            updateDashboard();
+            loadUserInfo();
+            loadHistoryRecords();
+        }
+
+        // 模态框控制
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
