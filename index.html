@@ -606,6 +606,7 @@
                             <th>日期</th>
                             <th>摄入 (kcal)</th>
                             <th>消耗 (kcal)</th>
+                            <th>基础代谢 (kcal)</th>
                             <th>净热量 (kcal)</th>
                             <th>预计体重变化 (kg)</th>
                             <th>状态</th>
@@ -613,7 +614,7 @@
                     </thead>
                     <tbody id="historyTableBody">
                         <tr>
-                            <td colspan="6" style="text-align: center; color: #999; padding: 30px;">暂无历史记录</td>
+                            <td colspan="7" style="text-align: center; color: #999; padding: 30px;">暂无历史记录</td>
                         </tr>
                     </tbody>
                 </table>
@@ -852,6 +853,7 @@
                 const userInfo = snapshot.val();
                 if (userInfo) {
                     localStorage.setItem(`user_${currentUser}`, JSON.stringify(userInfo));
+                    // 所有模式都显示个人信息
                     document.getElementById('userInfoDisplay').innerHTML = generateUserInfoHTML(userInfo);
                 }
             });
@@ -1013,15 +1015,18 @@
                         <td><strong>${dateDisplay}</strong></td>
                         <td>${intake.toFixed(0)}</td>
                         <td>${burn.toFixed(0)}</td>
-                        <td style="color: ${totalNetCalories < 0 ? '#22c55e' : '#ef4444'}">
-                            ${totalNetCalories.toFixed(0)}
+                        <td>${bmr.toFixed(0)}</td>
+                        <td>
+                            <strong style="color: ${totalNetCalories < 0 ? '#22c55e' : '#ef4444'}">${totalNetCalories.toFixed(0)}</strong>
+                            <br>
+                            <small style="color: #666;">${intake.toFixed(0)} - ${burn.toFixed(0)} - ${bmr.toFixed(0)}</small>
                         </td>
                         <td>
                             <span style="color: ${weightChange < 0 ? '#22c55e' : '#ef4444'}">
-                                ${weightChange > 0 ? '+' : ''}${weightChange.toFixed(3)}
+                                <strong>${weightChange > 0 ? '+' : ''}${weightChange.toFixed(3)}</strong>
                             </span>
                             <br>
-                            <span class="weight-change">(${bmr.toFixed(0)} BMR)</span>
+                            <small style="color: #666;">kg</small>
                         </td>
                         <td class="${statusClass}">${status}</td>
                     </tr>
@@ -1207,11 +1212,12 @@
 
         // 加载用户信息显示
         function loadUserInfo() {
+            // 访客模式也从 Firebase 加载个人信息
             const userInfo = getUserInfo();
             const display = document.getElementById('userInfoDisplay');
 
             if (!userInfo) {
-                display.innerHTML = '<p style="text-align: center; color: #999;">请先完善个人信息</p>';
+                display.innerHTML = '<p style="text-align: center; color: #999;">暂无个人信息</p>';
                 return;
             }
 
