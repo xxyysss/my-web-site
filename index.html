@@ -851,6 +851,7 @@
             userRef.child('info').on('value', (snapshot) => {
                 const userInfo = snapshot.val();
                 if (userInfo) {
+                    localStorage.setItem(`user_${currentUser}`, JSON.stringify(userInfo));
                     document.getElementById('userInfoDisplay').innerHTML = generateUserInfoHTML(userInfo);
                 }
             });
@@ -865,6 +866,7 @@
                         localStorage.setItem(key, JSON.stringify(allRecords[date]));
                     });
                 }
+                console.log('Firebase 数据已加载，记录日期：', allRecords ? Object.keys(allRecords) : '无');
                 updateDashboard();
                 loadHistoryRecords();
             });
@@ -925,16 +927,22 @@
 
         // 加载历史记录统计
         function loadHistoryRecords() {
+            console.log('loadHistoryRecords 开始执行');
             if (!currentUser) {
+                console.log('未登录用户');
                 document.getElementById('historyTableBody').innerHTML =
                     '<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">请先登录</td></tr>';
                 return;
             }
 
             const dates = getAllRecordDates();
+            console.log('获取到的日期列表：', dates);
+
             const userInfo = getUserInfo();
+            console.log('用户信息：', userInfo);
 
             if (dates.length === 0) {
+                console.log('没有历史记录日期');
                 document.getElementById('historyTableBody').innerHTML =
                     '<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">暂无历史记录</td></tr>';
                 return;
@@ -944,11 +952,25 @@
             const tableRows = dates.map(date => {
                 const key = `records_${currentUser}_${date}`;
                 const data = localStorage.getItem(key);
-                const records = data ? JSON.parse(data) : { foods: [], exercises: [] };
+                console.log(`读取 ${key}:`, data);
+
+                let records = { foods: [], exercises: [] };
+                try {
+                    records = data ? JSON.parse(data) : { foods: [], exercises: [] };
+                } catch (e) {
+                    console.error(`解析 ${key} 失败:`, e);
+                    records = { foods: [], exercises: [] };
+                }
+
+                // 确保 foods 和 exercises 是数组
+                const foods = Array.isArray(records?.foods) ? records.foods : [];
+                const exercises = Array.isArray(records?.exercises) ? records.exercises : [];
+
+                console.log(`日期 ${date} 的数据:`, { foods: foods.length, exercises: exercises.length });
 
                 // 计算该日数据
-                const intake = records.foods.reduce((sum, food) => sum + food.calories, 0);
-                const burn = records.exercises.reduce((sum, ex) => sum + ex.calories, 0);
+                const intake = foods.reduce((sum, food) => sum + (food.calories || 0), 0);
+                const burn = exercises.reduce((sum, ex) => sum + (ex.calories || 0), 0);
                 const netCalories = intake - burn;
 
                 // 计算基础代谢
@@ -1006,6 +1028,7 @@
                 `;
             }).join('');
 
+            console.log('生成的表格HTML长度：', tableRows.length);
             document.getElementById('historyTableBody').innerHTML = tableRows;
         }
 
