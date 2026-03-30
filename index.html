@@ -835,7 +835,9 @@
             document.getElementById('currentUserName').textContent = '主人';
 
             updateDateDisplay();
-            loadDataFromFirebase(); // 从 Firebase 加载数据
+            // 只加载 Firebase 数据，不调用 updateDashboard 和 loadHistoryRecords
+            // 因为它们会在 Firebase 数据加载完成后自动调用
+            loadDataFromFirebase();
         }
 
         // 从 Firebase 加载数据
