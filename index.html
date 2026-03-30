@@ -1308,9 +1308,13 @@
             const records = getDayRecords();
             const userInfo = getUserInfo();
 
+            // 确保 foods 和 exercises 是数组
+            const foods = Array.isArray(records.foods) ? records.foods : [];
+            const exercises = Array.isArray(records.exercises) ? records.exercises : [];
+
             // 计算总摄入和消耗
-            const totalIntake = records.foods.reduce((sum, food) => sum + food.calories, 0);
-            const totalBurn = records.exercises.reduce((sum, ex) => sum + ex.calories, 0);
+            const totalIntake = foods.reduce((sum, food) => sum + food.calories, 0);
+            const totalBurn = exercises.reduce((sum, ex) => sum + ex.calories, 0);
             const netCalories = totalIntake - totalBurn;
 
             // 更新显示
@@ -1330,9 +1334,9 @@
             }
 
             // 更新食物列表
-            updateFoodList(records.foods);
+            updateFoodList(foods);
             // 更新运动列表
-            updateExerciseList(records.exercises);
+            updateExerciseList(exercises);
         }
 
         // 获取当日记录
@@ -1341,7 +1345,14 @@
 
             const key = `records_${currentUser}_${currentDate}`;
             const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : { foods: [], exercises: [] };
+            if (data) {
+                const records = JSON.parse(data);
+                return {
+                    foods: Array.isArray(records.foods) ? records.foods : [],
+                    exercises: Array.isArray(records.exercises) ? records.exercises : []
+                };
+            }
+            return { foods: [], exercises: [] };
         }
 
         // 保存当日记录
