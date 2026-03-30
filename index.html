@@ -529,8 +529,8 @@
             <h1>🏃 智能减肥追踪系统</h1>
             <div class="user-section">
                 <span id="currentUserName">未登录</span>
-                <button class="btn btn-secondary" onclick="switchUser()">切换用户</button>
-                <button class="btn btn-primary" onclick="showUserSetup()">个人设置</button>
+                <button class="btn btn-secondary" id="switchUserBtn" onclick="switchUser()">切换用户</button>
+                <button class="btn btn-primary" id="userSetupBtn" onclick="showUserSetup()">个人设置</button>
             </div>
         </div>
 
@@ -577,7 +577,7 @@
             <!-- 饮食记录 -->
             <div class="card">
                 <h2>🍽️ 饮食记录</h2>
-                <button class="btn btn-primary" onclick="showAddFood()" style="width: 100%; margin-bottom: 15px;">添加食物</button>
+                <button class="btn btn-primary" id="addFoodBtn" onclick="showAddFood()" style="width: 100%; margin-bottom: 15px;">添加食物</button>
                 <div class="food-list" id="foodList">
                     <p style="text-align: center; color: #999;">今日暂无饮食记录</p>
                 </div>
@@ -586,7 +586,7 @@
             <!-- 运动记录 -->
             <div class="card">
                 <h2>💪 运动记录</h2>
-                <button class="btn btn-primary" onclick="showAddExercise()" style="width: 100%; margin-bottom: 15px;">添加运动</button>
+                <button class="btn btn-primary" id="addExerciseBtn" onclick="showAddExercise()" style="width: 100%; margin-bottom: 15px;">添加运动</button>
                 <div class="exercise-list" id="exerciseList">
                     <p style="text-align: center; color: #999;">今日暂无运动记录</p>
                 </div>
@@ -788,13 +788,55 @@
         let currentUser = null;
         let currentDate = new Date().toISOString().split('T')[0];
         let selectedFoodCalories = 0;
+        let readOnlyMode = true; // 只读模式：true=只读(访客), false=可编辑(主人)
 
         // 初始化应用
         function init() {
-            loadCurrentUser();
+            // 检查是否为主人（通过 localStorage 检查是否有标记）
+            const isOwner = localStorage.getItem('isOwner') === 'true';
+            readOnlyMode = !isOwner;
+
+            // 设置只读模式 UI
+            setReadOnlyUI(readOnlyMode);
+
+            // 固定设置为指定用户
+            currentUser = '主人';
+            document.getElementById('currentUserName').textContent = '主人';
+
             updateDateDisplay();
             updateDashboard();
             loadHistoryRecords();
+        }
+
+        // 设置只读模式 UI
+        function setReadOnlyUI(readOnly) {
+            if (readOnly) {
+                // 隐藏所有编辑按钮
+                document.getElementById('addFoodBtn').style.display = 'none';
+                document.getElementById('addExerciseBtn').style.display = 'none';
+                document.getElementById('userSetupBtn').style.display = 'none';
+                document.getElementById('switchUserBtn').style.display = 'none';
+
+                // 添加只读提示
+                const header = document.querySelector('.header');
+                if (header && !document.getElementById('readOnlyHint')) {
+                    const hint = document.createElement('div');
+                    hint.id = 'readOnlyHint';
+                    hint.style.cssText = 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 10px 15px; border-radius: 10px; margin-top: 10px; font-size: 14px; text-align: center;';
+                    hint.innerHTML = '👁️ 访客模式 - 只能查看数据，无法编辑';
+                    header.appendChild(hint);
+                }
+            } else {
+                // 显示编辑按钮
+                document.getElementById('addFoodBtn').style.display = 'inline-block';
+                document.getElementById('addExerciseBtn').style.display = 'inline-block';
+                document.getElementById('userSetupBtn').style.display = 'inline-block';
+                document.getElementById('switchUserBtn').style.display = 'inline-block';
+
+                // 移除只读提示
+                const hint = document.getElementById('readOnlyHint');
+                if (hint) hint.remove();
+            }
         }
 
         // 获取所有历史记录日期
@@ -1229,6 +1271,10 @@
 
         // 食物相关
         function showAddFood() {
+            if (readOnlyMode) {
+                alert('👁️ 访客模式下无法添加数据');
+                return;
+            }
             if (!currentUser) {
                 alert('请先登录');
                 return;
@@ -1350,12 +1396,16 @@
                         <small>${food.amount}g</small>
                     </div>
                     <span class="calories">${food.calories.toFixed(0)} kcal</span>
-                    <button class="delete-btn" onclick="deleteFood(${food.id})">删除</button>
+                    ${!readOnlyMode ? `<button class="delete-btn" onclick="deleteFood(${food.id})">删除</button>` : ''}
                 </div>
             `).join('');
         }
 
         function deleteFood(id) {
+            if (readOnlyMode) {
+                alert('👁️ 访客模式下无法删除数据');
+                return;
+            }
             const records = getDayRecords();
             records.foods = records.foods.filter(food => food.id !== id);
             saveDayRecords(records);
@@ -1366,6 +1416,10 @@
 
         // 运动相关
         function showAddExercise() {
+            if (readOnlyMode) {
+                alert('👁️ 访客模式下无法添加数据');
+                return;
+            }
             if (!currentUser) {
                 alert('请先登录');
                 return;
@@ -1465,12 +1519,16 @@
                         <small>${ex.duration}分钟${ex.steps ? ` · ${ex.steps}步` : ''}</small>
                     </div>
                     <span class="calories">-${ex.calories.toFixed(0)} kcal</span>
-                    <button class="delete-btn" onclick="deleteExercise(${ex.id})">删除</button>
+                    ${!readOnlyMode ? `<button class="delete-btn" onclick="deleteExercise(${ex.id})">删除</button>` : ''}
                 </div>
             `).join('');
         }
 
         function deleteExercise(id) {
+            if (readOnlyMode) {
+                alert('👁️ 访客模式下无法删除数据');
+                return;
+            }
             const records = getDayRecords();
             records.exercises = records.exercises.filter(ex => ex.id !== id);
             saveDayRecords(records);
